@@ -70,3 +70,4 @@ Testing/
 
 # claude
 .claude/
+compile_commands.json
