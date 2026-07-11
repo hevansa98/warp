@@ -1,0 +1,9 @@
+name: pvc
+type: pipe
+ip: 127.0.0.1
+sidea:
+  port: 42002
+  destination: 42001
+sideb:
+  port: 42003
+  destination: 42004

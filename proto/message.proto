@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package dist_comms;
+
+message NodeMessage {
+    string sender  = 1;
+    string payload = 2;
+    uint32 seq     = 3;  // sequence number for ordering / drop detection
+}

@@ -1,0 +1,21 @@
+add_executable(dist_comms
+    main.cpp
+)
+
+target_include_directories(dist_comms PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+target_compile_features(dist_comms PRIVATE cxx_std_20)
+
+target_compile_options(dist_comms PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wthread-safety
+)
+
+find_package(Threads REQUIRED)
+
+add_subdirectory(comm)
+add_subdirectory(node)
+
+target_link_libraries(dist_comms PRIVATE comm node yaml-cpp::yaml-cpp proto_gen)

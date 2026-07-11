@@ -1,0 +1,9 @@
+name: ubend
+type: uturn
+ip: 127.0.0.1
+sidea:
+  port: 42004
+  destination: 42003
+sideb:
+  port: 42005
+  destination: 42006
