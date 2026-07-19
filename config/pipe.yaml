@@ -1,9 +1,17 @@
 name: pvc
 type: pipe
-ip: 127.0.0.1
-sidea:
-  port: 42002
-  destination: 42001
-sideb:
-  port: 42003
-  destination: 42004
+endpoints:
+  - name: sidea
+    source:
+      ip: 127.0.0.1
+      port: 42002
+    destination:
+      ip: 127.0.0.1
+      port: 42001
+  - name: sideb
+    source:
+      ip: 127.0.0.1
+      port: 42003
+    destination:
+      ip: 127.0.0.1
+      port: 42004

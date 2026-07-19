@@ -1,77 +1,66 @@
 #include "node/node.hpp"
 
-CommNode::CommNode(NodeConfig & config, NodeType nodeType) : type_(nodeType)
+CommNode::CommNode(NodeConfig& config, NodeType nodeType) : type_(nodeType)
 {
-    switch (type_)
-    {
-    case NodeType::SOURCE:
-        bSide = make_comm_handler(Protocol::UDP);
-        break;
-    case NodeType::PIPE:
-        aSide = make_comm_handler(Protocol::UDP);
-        bSide = make_comm_handler(Protocol::UDP);
-        break;
-
-    case NodeType::UTURN:
-        aSide = make_comm_handler(Protocol::UDP);
-        break;
-    
-    default:
-        break;
-    }
+    for (std::size_t i = 0; i < config.endpoints.size(); ++i)
+        handlers_.push_back(make_comm_handler(Protocol::UDP));
 
     BuildNode(config);
 }
 
-void CommNode::BuildNode(NodeConfig & config)
+void CommNode::BuildNode(NodeConfig& config)
 {
+    const auto n = config.endpoints.size();
+
     switch (type_)
     {
     case NodeType::SOURCE:
-        bSide->bind(config.ip, config.portb);
-        bSide->connect(config.ip, config.portbdest);
-        bSide->start_receive(
-            [&](ICommHandler::Bytes data, PeerInfo peer){
-            std::cout << "SENDER: " << peer.address << ":" << peer.port << "\n";
-            std::cout << "RECEIVED PAYLOAD\n";
-        });
+        for (std::size_t i = 0; i < n; ++i) {
+            const auto& ep = config.endpoints[i];
+            handlers_[i]->bind(ep.source.ip, ep.source.port);
+            handlers_[i]->connect(ep.destination.ip, ep.destination.port);
+            handlers_[i]->start_receive([i](ICommHandler::Bytes data, PeerInfo peer) {
+                std::cout << "[source:" << i << "] from "
+                          << peer.address << ":" << peer.port << "\n";
+                std::cout << "RECEIVED PAYLOAD\n";
+            });
+        }
         break;
-    case NodeType::PIPE:
-        aSide->bind(config.ip, config.porta);
-        aSide->connect(config.ip, config.portadest);
-        aSide->start_receive(
-            [&](ICommHandler::Bytes data, PeerInfo peer){
-            std::cout << "SENDER: " << peer.address << ":" << peer.port << "\n";
-            std::cout << "PASSING THROUGH TO B SIDE\n";
-            bSide->send_to(std::as_bytes(std::span{data}), config.ip, config.portbdest);
-        });
 
-        bSide->bind(config.ip, config.portb);
-        bSide->connect(config.ip, config.portbdest);
-        bSide->start_receive(
-            [&](ICommHandler::Bytes data, PeerInfo peer){
-            std::cout << "SENDER: " << peer.address << ":" << peer.port << "\n";
-            std::cout << "PASSING THROUGH TO A SIDE\n";
-            aSide->send_to(std::as_bytes(std::span{data}), config.ip, config.portadest);
-        });
+    case NodeType::PIPE:
+        for (std::size_t i = 0; i < n; ++i) {
+            const auto& ep   = config.endpoints[i];
+            const auto  peer = (i + 1) % n;  // forward to next endpoint, wraps around
+            handlers_[i]->bind(ep.source.ip, ep.source.port);
+            handlers_[i]->start_receive([this, i, peer, &config](ICommHandler::Bytes data, PeerInfo from) {
+                std::cout << "[pipe:" << i << "] from "
+                          << from.address << ":" << from.port
+                          << " → forwarding to endpoint " << peer << "\n";
+                const auto& dest = config.endpoints[peer].destination;
+                handlers_[peer]->send_to(std::as_bytes(std::span{data}), dest.ip, dest.port);
+            });
+        }
         break;
 
     case NodeType::UTURN:
-        aSide->bind(config.ip, config.porta);
-        aSide->start_receive(
-            [&](ICommHandler::Bytes data, PeerInfo peer){
-            std::cout << "SENDER: " << peer.address << ":" << peer.port << "\n";
-            std::cout << "RETURNING TO SENDER\n";
-            aSide->send_to(std::as_bytes(std::span{data}), peer.address, peer.port);
-        });
+        for (std::size_t i = 0; i < n; ++i) {
+            const auto& ep = config.endpoints[i];
+            handlers_[i]->bind(ep.source.ip, ep.source.port);
+            handlers_[i]->start_receive([this, i](ICommHandler::Bytes data, PeerInfo peer) {
+                std::cout << "[uturn:" << i << "] returning to "
+                          << peer.address << ":" << peer.port << "\n";
+                handlers_[i]->send_to(std::as_bytes(std::span{data}), peer.address, peer.port);
+            });
+        }
         break;
-    
+
     default:
         break;
     }
 }
 
-void CommNode::Send(const std::string & message)
+void CommNode::Send(const std::string& message)
 {
-    bSide->send(std::as_bytes(std::span{message}));
+    if (handlers_.empty()) return;
+    handlers_[0]->send(std::as_bytes(std::span{message}));
 }

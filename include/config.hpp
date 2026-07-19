@@ -4,21 +4,29 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <yaml-cpp/yaml.h>
 
+struct AddressConfig {
+    std::string ip{"127.0.0.1"};
+    uint16_t    port{0};
+};
+
+struct EndpointConfig {
+    std::string   name;
+    AddressConfig source;
+    AddressConfig destination;
+};
+
 struct NodeConfig {
-    std::string name;
-    std::string ip;
-    std::string type;
-    uint16_t    porta{0};
-    uint16_t    portadest{0};
-    uint16_t    portb{0};
-    uint16_t    portbdest{0};
+    std::string                 name;
+    std::string                 type;
+    std::vector<EndpointConfig> endpoints;
 };
 
 // Loads a YAML config file and returns a NodeConfig.
-// Throws std::runtime_error if the file can't be opened or a field is missing.
+// Throws std::runtime_error if the file can't be opened or a required field is missing.
 inline NodeConfig parse_config(std::string_view path) {
     YAML::Node doc;
     try {
@@ -33,13 +41,28 @@ inline NodeConfig parse_config(std::string_view path) {
         return node;
     };
 
-    return {
-        .name       = require(doc, "name").as<std::string>(),
-        .ip         = require(doc, "ip").as<std::string>(),
-        .type       = require(doc, "type").as<std::string>(),
-        .porta      = require(require(doc, "sidea"), "port").as<uint16_t>(),
-        .portadest  = require(require(doc, "sidea"), "destination").as<uint16_t>(),
-        .portb      = require(require(doc, "sideb"), "port").as<uint16_t>(),
-        .portbdest  = require(require(doc, "sideb"), "destination").as<uint16_t>(),
+    auto parse_address = [&](const YAML::Node& node) -> AddressConfig {
+        return {
+            .ip   = node["ip"] ? node["ip"].as<std::string>() : "127.0.0.1",
+            .port = require(node, "port").as<uint16_t>(),
+        };
     };
+
+    NodeConfig cfg {
+        .name = require(doc, "name").as<std::string>(),
+        .type = require(doc, "type").as<std::string>(),
+    };
+
+    for (const auto& ep : require(doc, "endpoints")) {
+        cfg.endpoints.push_back({
+            .name        = require(ep, "name").as<std::string>(),
+            .source      = parse_address(require(ep, "source")),
+            .destination = parse_address(require(ep, "destination")),
+        });
+    }
+
+    if (cfg.endpoints.empty())
+        throw std::runtime_error("Config has no endpoints");
+
+    return cfg;
 }
