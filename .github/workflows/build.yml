@@ -4,6 +4,7 @@ on:
   push:
     branches: [develop, main]
   pull_request:
+  workflow_dispatch: # 👈 Add this exact line
 
 jobs:
   build:
