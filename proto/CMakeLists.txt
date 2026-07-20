@@ -1,4 +1,5 @@
 add_library(proto_gen STATIC)
+set_property(TARGET proto_gen PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_features(proto_gen PUBLIC cxx_std_17)
 

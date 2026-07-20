@@ -51,6 +51,7 @@ inline NodeConfig parse_config(std::string_view path) {
     NodeConfig cfg {
         .name = require(doc, "name").as<std::string>(),
         .type = require(doc, "type").as<std::string>(),
+        .endpoints = std::vector<EndpointConfig>(),
     };
 
     for (const auto& ep : require(doc, "endpoints")) {

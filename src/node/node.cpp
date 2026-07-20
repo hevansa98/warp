@@ -20,9 +20,15 @@ void CommNode::BuildNode(NodeConfig& config)
             handlers_[i]->bind(ep.source.ip, ep.source.port);
             handlers_[i]->connect(ep.destination.ip, ep.destination.port);
             handlers_[i]->start_receive([i](ICommHandler::Bytes data, PeerInfo peer) {
+                dist_comms::NodeMessage msg;
+                if (!msg.ParseFromArray(data.data(), static_cast<int>(data.size()))) {
+                    std::cout << "[source:" << i << "] failed to parse message\n";
+                    return;
+                }
                 std::cout << "[source:" << i << "] from "
-                          << peer.address << ":" << peer.port << "\n";
-                std::cout << "RECEIVED PAYLOAD\n";
+                          << peer.address << ":" << peer.port
+                          << " seq=" << msg.seq()
+                          << " payload=\"" << msg.payload() << "\"\n";
             });
         }
         break;
@@ -59,8 +65,10 @@ void CommNode::BuildNode(NodeConfig& config)
     }
 }
 
-void CommNode::Send(const std::string& message)
+void CommNode::Send(const dist_comms::NodeMessage& message)
 {
     if (handlers_.empty()) return;
-    handlers_[0]->send(std::as_bytes(std::span{message}));
+    std::string buf;
+    message.SerializeToString(&buf);
+    handlers_[0]->send(std::as_bytes(std::span{buf}));
 }

@@ -10,8 +10,7 @@ target_compile_options(node PRIVATE
     -Wall
     -Wextra
     -Wpedantic
-    -Wthread-safety
 )
 
 find_package(Threads REQUIRED)
-target_link_libraries(node PRIVATE Threads::Threads comm yaml-cpp::yaml-cpp)
+target_link_libraries(node PRIVATE Threads::Threads comm yaml-cpp::yaml-cpp PUBLIC proto_gen)

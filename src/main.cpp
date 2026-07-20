@@ -34,10 +34,7 @@ int main(int argc, char* argv[])
     {
         dist_comms::NodeMessage msg;
         msg.set_payload("hello!");
-
-        std::string buf;
-        msg.SerializeToString(&buf);
-        node.Send(buf);
+        node.Send(msg);
     }
     
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

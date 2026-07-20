@@ -1,0 +1,10 @@
+name: chain_source
+type: source
+endpoints:
+  - name: main
+    source:
+      ip: 127.0.0.1
+      port: 42010
+    destination:
+      ip: 127.0.0.1
+      port: 42011

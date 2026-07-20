@@ -1,4 +1,6 @@
 add_library(comm SHARED
+    tcp_handler.cpp
+    udp_handler.cpp
     comm_handler.cpp
 )
 
@@ -10,7 +12,6 @@ target_compile_options(comm PRIVATE
     -Wall
     -Wextra
     -Wpedantic
-    -Wthread-safety
 )
 
 find_package(Threads REQUIRED)

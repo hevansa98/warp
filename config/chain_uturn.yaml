@@ -1,0 +1,10 @@
+name: chain_uturn
+type: uturn
+endpoints:
+  - name: main
+    source:
+      ip: 127.0.0.1
+      port: 42013
+    destination:
+      ip: 127.0.0.1
+      port: 0

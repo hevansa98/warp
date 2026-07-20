@@ -7,6 +7,7 @@
 
 #include "comm/comm_handler.hpp"
 #include "config.hpp"
+#include "message.pb.h"
 
 enum class NodeType { SOURCE, PIPE, UTURN };
 
@@ -16,7 +17,7 @@ public:
     CommNode(NodeConfig& config, NodeType nodeType);
     ~CommNode() = default;
 
-    void Send(const std::string& message);
+    void Send(const dist_comms::NodeMessage& message);
 
 private:
     void BuildNode(NodeConfig& config);

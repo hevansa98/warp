@@ -1,0 +1,17 @@
+name: chain_pipe
+type: pipe
+endpoints:
+  - name: from_source
+    source:
+      ip: 127.0.0.1
+      port: 42011
+    destination:
+      ip: 127.0.0.1
+      port: 42010
+  - name: to_uturn
+    source:
+      ip: 127.0.0.1
+      port: 42012
+    destination:
+      ip: 127.0.0.1
+      port: 42013

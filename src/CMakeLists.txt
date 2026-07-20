@@ -10,7 +10,6 @@ target_compile_options(dist_comms PRIVATE
     -Wall
     -Wextra
     -Wpedantic
-    -Wthread-safety
 )
 
 find_package(Threads REQUIRED)
